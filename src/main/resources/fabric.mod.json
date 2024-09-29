@@ -16,7 +16,7 @@
 	"environment": "*",
 	"entrypoints": {
 		"main": [
-			"dev.blend.Blend"
+          "dev.blend.Initializer"
 		]
 	},
 	"mixins": [

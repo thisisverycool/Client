@@ -23,6 +23,10 @@ repositories {
 	}
 }
 
+configurations {
+	library
+}
+
 dependencies {
 	// To change the versions see the gradle.properties file
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
@@ -31,12 +35,23 @@ dependencies {
 
 	// Fabric API. This is technically optional, but you probably want it anyway.
 	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
-	
+
+	library("io.github.humbleui:skija-windows-x64:0.116.2")
+//	library("io.github.humbleui:skija-linux-x64:0.116.2")
+
+	// Lombok
+	implementation("org.projectlombok:lombok:1.18.34")
+	annotationProcessor("org.projectlombok:lombok:1.18.34")
+
+	// event bus
+	library("org.greenrobot:eventbus-java:3.3.1")
+
+	// include "library" while debugging.
+	configurations.implementation.extendsFrom(configurations.library)
 }
 
 processResources {
 	inputs.property "version", project.version
-
 	filesMatching("fabric.mod.json") {
 		expand "version": project.version
 	}

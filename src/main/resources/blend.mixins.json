@@ -1,11 +1,17 @@
 {
-	"required": true,
-	"package": "dev.blend.mixin",
-	"compatibilityLevel": "JAVA_21",
-	"mixins": [
-
-	],
-	"injectors": {
-		"defaultRequire": 1
-	}
+  "required": true,
+  "package": "dev.blend.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "client": [
+    "misc.MixinKeyboard",
+    "misc.MixinWindow",
+    "network.MixinClientPlayNetworkHandler",
+    "player.MixinClientPlayerEntity",
+    "player.MixinMinecraftClient"
+  ]
 }
