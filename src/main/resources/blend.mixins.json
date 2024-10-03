@@ -12,6 +12,7 @@
     "misc.MixinWindow",
     "network.MixinClientPlayNetworkHandler",
     "player.MixinClientPlayerEntity",
-    "player.MixinMinecraftClient"
+    "player.MixinMinecraftClient",
+    "render.MixinCapabilityTracker"
   ]
 }

@@ -1,16 +1,19 @@
 package dev.blend.util.render;
 
+import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import dev.blend.util.MC;
 import io.github.humbleui.skija.*;
-import io.github.humbleui.skija.impl.Library;
+import io.github.humbleui.types.Rect;
 import lombok.Getter;
 import lombok.experimental.UtilityClass;
 import net.minecraft.client.gl.Framebuffer;
 import net.minecraft.client.gl.SimpleFramebuffer;
 
-import static org.lwjgl.opengl.GL11.glGetInteger;
-import static org.lwjgl.opengl.GL30.GL_FRAMEBUFFER_BINDING;
+import java.awt.Color;
+
+import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.opengl.GL30.*;
 
 @UtilityClass
 public class RenderUtil implements MC {
@@ -22,16 +25,36 @@ public class RenderUtil implements MC {
     @Getter
     private Canvas canvas;
     private Framebuffer framebuffer;
+    private int fbo;
 
     public void makeContext() {
-        initFramebuffer();
+        initFrameBuffer();
         context = DirectContext.makeGL();
     }
 
     public void resize() {
         initSkia();
         framebuffer.delete();
-        initFramebuffer();
+        initFrameBuffer();
+    }
+
+    public void rect(Number x, Number y, Number width, Number height, Color color) {
+        try (
+                Paint paint = new Paint()
+                        .setAntiAlias(true)
+                        .setARGB(color.getAlpha(), color.getRed(), color.getGreen(), color.getBlue())
+        ) {
+            getCanvas().drawRect(Rect.makeXYWH(x.floatValue(), y.floatValue(), width.floatValue(), height.floatValue()), paint);
+        }
+    }
+    public void rect(Number x, Number y, Number width, Number height, Shader shader) {
+        try (
+                Paint paint = new Paint()
+                        .setAntiAlias(true)
+                        .setShader(shader)
+        ) {
+            getCanvas().drawRect(Rect.makeXYWH(x.floatValue(), y.floatValue(), width.floatValue(), height.floatValue()), paint);
+        }
     }
 
     public int save() {
@@ -52,17 +75,31 @@ public class RenderUtil implements MC {
     }
 
     public void preRender() {
-        
+        fbo = glGetInteger(GL_DRAW_FRAMEBUFFER_BINDING);
+        StateManager.INSTANCE.save();
+        clearAllGL();
     }
     public void postRender() {
-
+        flush();
+        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbo);
+        pre();
+        framebuffer.draw(mc.getWindow().getFramebufferWidth(), mc.getWindow().getFramebufferHeight());
+        StateManager.INSTANCE.restore();
+        post();
     }
 
-    /**
-     * DO NOT INTERFERE WITH ANY OF THIS!
-     */
-    private void initFramebuffer() {
-        framebuffer = new SimpleFramebuffer(mc.getWindow().getWidth(), mc.getWindow().getHeight(), true, false);
+    private void pre() {
+        RenderSystem.enableBlend();
+        RenderSystem.blendFunc(GlStateManager.SrcFactor.SRC_ALPHA, GlStateManager.DstFactor.ONE);
+        RenderSystem.enableDepthTest();
+        RenderSystem.depthFunc(GL_LESS);
+        RenderSystem.clear(GL_DEPTH_BUFFER_BIT, false);
+    }
+    private void post() {
+        RenderSystem.disableCull();
+        RenderSystem.disableDepthTest();
+        RenderSystem.enableBlend();
+        RenderSystem.blendFuncSeparate(GlStateManager.SrcFactor.SRC_ALPHA, GlStateManager.DstFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SrcFactor.ZERO, GlStateManager.DstFactor.ONE);
     }
 
     /**
@@ -89,6 +126,10 @@ public class RenderUtil implements MC {
                 ColorSpace.getSRGB()
         );
         canvas = surface.getCanvas();
+    }
+
+    private void initFrameBuffer() {
+        framebuffer = new SimpleFramebuffer(mc.getWindow().getFramebufferWidth(), mc.getWindow().getFramebufferHeight(), true, false);
     }
 
 }
